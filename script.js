@@ -1,30 +1,46 @@
-document.getElementById('submit').addEventListener('click', calculatePrice);
+const calculate = () => {
+    const name = document.getElementById('name').value.trim();
+    let price = Number(document.getElementById('startingbid').value);
+    const education = parseFloat(document.getElementById('education').value);
+    const networth = parseFloat(document.getElementById('networth').value);
+    const caste = parseInt(document.getElementById('caste').value);
+    const loveLetter = document.getElementById('loveLetter').value.trim();
 
-function calculatePrice() {
-    let basePrice = 100;
+    if (!name || !price) {
+        alert('Please enter both a name and a starting bid.');
+        return;
+    }
 
-    let education = parseFloat(document.getElementById('education').value);
+    const skills = Array.from(document.getElementsByClassName('skills'));
+    const skillsBonus = skills.filter(skill => skill.checked).reduce((sum, skill) => sum + Number(skill.value), 0);
 
-    let networth = parseFloat(document.getElementById('networth').value);
+    const age = parseFloat(document.querySelector('input[name="age"]:checked').value);
 
-    let caste = parseInt(document.getElementById('caste').value);
-
-    let skillsBonus = 0;
-    document.querySelectorAll('.skills:checked').forEach(skill => {
-        skillsBonus += parseInt(skill.value);
-    });
-
-    let age = parseFloat(document.querySelector('input[name="age"]:checked').value);
-
-    let reputationPenalty = 1;
+    let reputationMultiplier = 1;
+    let reputationPenalty = 0;
     document.querySelectorAll('.reputation:checked').forEach(rep => {
-        reputationPenalty *= parseFloat(rep.value);
+        const value = parseFloat(rep.value);
+        if (value < 0) {
+            reputationPenalty += value;
+        } else {
+            reputationMultiplier *= value;
+        }
     });
 
-    let finalPrice = basePrice * education * networth * age * reputationPenalty + caste + skillsBonus;
+    let finalPrice = price * education * networth * age * reputationMultiplier + caste + skillsBonus + reputationPenalty;
 
-    document.getElementById('totalPrice').innerText = `$${finalPrice.toFixed(2)}`;
+    const person = {
+        name: name,
+        price: finalPrice.toFixed(2),
+        letter: loveLetter
+    };
 
-    let priceColor = finalPrice > 200 ? 'green' : 'red';
-    document.getElementById('totalPrice').style.color = priceColor;
-}
+    document.getElementById('resultText').innerHTML = `
+        The price for ${person.name} is $${person.price}.
+        <br>Your love letter: "${person.letter || 'No letter provided.'}"
+    `;
+
+    document.getElementById('resultText').style.color = finalPrice > 200 ? 'green' : 'red';
+};
+
+document.getElementById('submit').addEventListener('click', calculate);
